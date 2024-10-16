@@ -67,7 +67,7 @@ if [ ! -d "MyNotpixel-bot" ]; then
 else
     # If the directory exists, just navigate to it
     echo -e "${GREEN}Notpixel-bot is already installed. Navigating to the directory...${NC}"
-    cd MyNotpixel-bot || exit
+    cd Notpixel-bot || exit
 
     # Activate the virtual environment
     echo -e "${BLUE}Activating Python virtual environment...${NC}"
