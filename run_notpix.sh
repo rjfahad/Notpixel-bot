@@ -25,8 +25,8 @@ install_packages() {
     pkg install python3.10 -y
 }
 
-# Check if MyNotpixel-bot directory exists
-if [ ! -d "MyNotpixel-bot" ]; then
+# Check if Notpixel-bot directory exists
+if [ ! -d "Notpixel-bot" ]; then
     # If the directory does not exist, install everything
     install_packages
 
