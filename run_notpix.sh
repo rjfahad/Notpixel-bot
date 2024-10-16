@@ -34,13 +34,13 @@ if [ ! -d "Notpixel-bot" ]; then
     echo -e "${BLUE}Upgrading pip and installing wheel...${NC}"
     pip3.10 install --upgrade pip wheel --quiet
 
-    # Clone the MyNotpixel-bot repository
-    echo -e "${BLUE}Cloning MyNotpixel-bot repository...${NC}"
-    git clone https://github.com/rjfahad/Notpixel-bot.git
+    # Clone the Notpixel-bot repository
+    echo -e "${BLUE}Cloning Notpixel-bot repository...${NC}"
+    git clone https://github.com/rjfahad/Notpixel-bot
 
     # Change directory to Notpixel-bot
     echo -e "${BLUE}Navigating to Notpixel-bot directory...${NC}"
-    cd MyNotpixel-bot || exit
+    cd Notpixel-bot || exit
 
     # Copy .env-example to .env
     echo -e "${BLUE}Copying .env-example to .env...${NC}"
