@@ -32,7 +32,7 @@ if [ ! -d "Notpixel-bot" ]; then
 
     # Upgrade pip and install wheel
     echo -e "${BLUE}Upgrading pip and installing wheel...${NC}"
-    pip3.10 install --upgrade pip wheel --quiet
+    pip3 install --upgrade pip wheel --quiet
 
     # Clone the Notpixel-bot repository
     echo -e "${BLUE}Cloning Notpixel-bot repository...${NC}"
@@ -60,7 +60,7 @@ if [ ! -d "Notpixel-bot" ]; then
 
     # Install required Python packages
     echo -e "${BLUE}Installing Python dependencies from requirements.txt...${NC}"
-    pip3.10 install -r requirements.txt --quiet
+    pip3 install -r requirements.txt
 
     echo -e "${GREEN}Installation completed! You can now run the bot.${NC}"
 
