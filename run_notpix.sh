@@ -86,7 +86,7 @@ if [ ! -f "venv/bin/activate" ]; then
 
     # Install required Python packages
     echo -e "${BLUE}Installing Python dependencies from requirements.txt...${NC}"
-    pip3.10 install -r requirements.txt
+    pip3 install -r requirements.txt
 else
     echo -e "${GREEN}Virtual environment already exists. Skipping dependency installation.${NC}"
 fi
