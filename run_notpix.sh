@@ -7,36 +7,48 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Function to install packages
+# Function to install a package if not already installed
+install_if_not_installed() {
+    pkg_name=$1
+    if ! dpkg -s "$pkg_name" >/dev/null 2>&1; then
+        echo -e "${BLUE}Installing ${pkg_name}...${NC}"
+        pkg install "$pkg_name" -y
+    else
+        echo -e "${GREEN}${pkg_name} is already installed. Skipping...${NC}"
+    fi
+}
+
+# Function to install necessary packages
 install_packages() {
-    echo -e "${BLUE}Updating and upgrading packages...${NC}"
-    pkg update && pkg upgrade -y
+    echo -e "${BLUE}Updating package lists...${NC}"
+    pkg update
 
-    echo -e "${GREEN}Installing git and nano...${NC}"
-    pkg install git nano -y
-
-    echo -e "${GREEN}Installing development tools: clang, cmake, ninja, rust, make...${NC}"
-    pkg install clang cmake ninja rust make -y
-
-    echo -e "${GREEN}Installing tur-repo...${NC}"
-    pkg install tur-repo -y
-
-    echo -e "${GREEN}Installing Python 3.10...${NC}"
-    pkg install python3.10 -y
+    install_if_not_installed "git"
+    install_if_not_installed "nano"
+    install_if_not_installed "clang"
+    install_if_not_installed "cmake"
+    install_if_not_installed "ninja"
+    install_if_not_installed "rust"
+    install_if_not_installed "make"
+    install_if_not_installed "tur-repo"
+    install_if_not_installed "python3.10"
+    install_if_not_installed "libjpeg-turbo"
+    install_if_not_installed "libpng"
+    install_if_not_installed "zlib"
 }
 
 # Check if Notpixel-bot directory exists
 if [ ! -d "Notpixel-bot" ]; then
-    # If the directory does not exist, install everything
+    # If the directory does not exist, install packages and clone the repo
     install_packages
 
-    # Upgrade pip and install wheel
+    # Upgrade pip and install wheel if necessary
     echo -e "${BLUE}Upgrading pip and installing wheel...${NC}"
     pip3 install --upgrade pip wheel --quiet
 
     # Clone the Notpixel-bot repository
     echo -e "${BLUE}Cloning Notpixel-bot repository...${NC}"
-    git clone https://github.com/rjfahad/Notpixel-bot
+    git clone https://github.com/vanhbakaa/Notpixel-bot
 
     # Change directory to Notpixel-bot
     echo -e "${BLUE}Navigating to Notpixel-bot directory...${NC}"
@@ -60,7 +72,11 @@ if [ ! -d "Notpixel-bot" ]; then
 
     # Install required Python packages
     echo -e "${BLUE}Installing Python dependencies from requirements.txt...${NC}"
-    pip3 install -r requirements.txt
+    pip3 install -r requirements.txt --quiet
+
+    # Install the Pillow library
+    echo -e "${BLUE}Installing Pillow...${NC}"
+    pip3 install pillow --quiet
 
     echo -e "${GREEN}Installation completed! You can now run the bot.${NC}"
 
@@ -74,7 +90,7 @@ else
     source venv/bin/activate
 fi
 
-# Check if required Python packages are already installed
+# Check if the virtual environment exists
 if [ ! -f "venv/bin/activate" ]; then
     # If the virtual environment does not exist, set it up
     echo -e "${BLUE}Setting up Python virtual environment...${NC}"
@@ -87,6 +103,10 @@ if [ ! -f "venv/bin/activate" ]; then
     # Install required Python packages
     echo -e "${BLUE}Installing Python dependencies from requirements.txt...${NC}"
     pip3 install -r requirements.txt
+
+    # Install the Pillow library
+    echo -e "${BLUE}Installing Pillow...${NC}"
+    pip3 install pillow --quiet
 else
     echo -e "${GREEN}Virtual environment already exists. Skipping dependency installation.${NC}"
 fi
