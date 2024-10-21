@@ -7,6 +7,14 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Display welcome message
+echo -e "${GREEN}============================================================${NC}"
+echo -e "${GREEN}           Welcome to the SeedCoinBot Installation           ${NC}"
+echo -e "${GREEN}============================================================${NC}"
+echo -e "${YELLOW}Auto script installer by: 🚀 AIRDROP SEIZER 💰${NC}"
+echo -e "${YELLOW}Join our channel on Telegram: https://t.me/airdrop_automation!${NC}"
+echo -e "${GREEN}============================================================${NC}"
+
 # Function to install a package if not already installed
 install_if_not_installed() {
     pkg_name=$1
