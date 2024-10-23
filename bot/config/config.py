@@ -26,6 +26,9 @@ class Settings(BaseSettings):
 
     DELAY_EACH_ACCOUNT: list[int] = [10,15]
     SLEEP_TIME_BETWEEN_EACH_ROUND: list[int] = [1000, 1500]
+
+    ADVANCED_ANTI_DETECTION: bool = False
+
     USE_PROXY_FROM_FILE: bool = False
 
 
