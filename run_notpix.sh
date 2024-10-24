@@ -80,11 +80,11 @@ if [ ! -d "Notpixel-bot" ]; then
 
     # Install required Python packages
     echo -e "${BLUE}Installing Python dependencies from requirements.txt...${NC}"
-    pip3 install -r requirements.txt --quiet
+    pip3 install -r requirements.txt
 
     # Install the Pillow library
     echo -e "${BLUE}Installing Pillow...${NC}"
-    pip3 install pillow --quiet
+    pip3 install pillow 
 
     echo -e "${GREEN}Installation completed! You can now run the bot.${NC}"
 
