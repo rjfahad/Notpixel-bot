@@ -12,7 +12,7 @@ echo -e "${GREEN}============================================================${N
 echo -e "${GREEN}           Welcome to the Notpixel-bot  Installation           ${NC}"
 echo -e "${GREEN}============================================================${NC}"
 echo -e "${YELLOW}Auto script installer by: 🚀 AIRDROP SEIZER 💰${NC}"
-echo -e "${YELLOW}Join our channel on Telegram: https://t.me/airdrop_automation!${NC}"
+echo -e "${YELLOW}Join our channel on Telegram: https://t.me/airdrop_automation${NC}"
 echo -e "${GREEN}============================================================${NC}"
 
 # Function to install a package if not already installed
