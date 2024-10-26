@@ -102,6 +102,8 @@ else
 fi
 
 # Run the bot
+echo -e "${GREEN}Updating the bot...${NC}"
+git pull
 echo -e "${GREEN}Running the bot...${NC}"
 python3.10 main.py
 
