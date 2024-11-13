@@ -7,13 +7,14 @@ from urllib.parse import unquote
 import aiohttp
 import requests
 from aiocfscrape import CloudflareScraper
+from aiofile import AIOFile
 from aiohttp_proxy import ProxyConnector
 from better_proxy import Proxy
 from pyrogram import Client
 from pyrogram.errors import Unauthorized, UserDeactivated, AuthKeyUnregistered, FloodWait
 from pyrogram.raw.types import InputBotAppShortName
 from pyrogram.raw.functions.messages import RequestAppWebView
-from bot.core.agents import generate_random_user_agent
+from bot.core.agents import generate_random_user_agent, fetch_version
 from bot.config import settings
 from datetime import datetime, timedelta
 from tzlocal import get_localzone
@@ -23,7 +24,7 @@ from bot.core.image_checker import get_cords_and_color, template_to_join, inform
 from bot.utils import logger
 from bot.exceptions import InvalidSession
 from .headers import headers
-from random import randint, uniform
+from random import randint
 import urllib3
 import base64
 import os
@@ -33,6 +34,7 @@ import traceback
 from bot.utils.ps import check_base_url
 import sys
 import cloudscraper
+from bot.utils import launcher as lc
 
 
 def generate_websocket_key():
@@ -91,6 +93,7 @@ class Tapper:
         self.user_upgrades = None
         self.template_to_join = 0
         self.completed_task = None
+        self.query_anti = None
 
     async def get_tg_web_data(self, proxy: str | None) -> str:
         try:
@@ -144,6 +147,7 @@ class Tapper:
             ))
 
             auth_url = web_view.url
+            self.query_anti = auth_url.split('tgWebAppData=')[1].split('&tgWebAppVersion')[0]
 
             tg_web_data = unquote(string=auth_url.split('tgWebAppData=')[1].split('&tgWebAppVersion')[0])
 
@@ -173,6 +177,23 @@ class Tapper:
             return True
         except Exception as error:
             logger.error(f"{self.session_name} | Proxy: {proxy} | Error: {error}")
+            return False
+
+    async def anti_detect(self, http_client: aiohttp.ClientSession, u):
+        try:
+            payload = {
+                "d": "notpx.app",
+                "n": "pageview",
+                "r": "https://web.telegram.org/",
+                "u": f"https://app.notpx.app/#tgWebAppData={u}&tgWebAppVersion=7.10&tgWebAppPlatform=android&tgWebAppThemeParams=%7B%22bg_color%22%3A%22%23212121%22%2C%22text_color%22%3A%22%23ffffff%22%2C%22hint_color%22%3A%22%23aaaaaa%22%2C%22link_color%22%3A%22%238774e1%22%2C%22button_color%22%3A%22%238774e1%22%2C%22button_text_color%22%3A%22%23ffffff%22%2C%22secondary_bg_color%22%3A%22%230f0f0f%22%2C%22header_bg_color%22%3A%22%23212121%22%2C%22accent_text_color%22%3A%22%238774e1%22%2C%22section_bg_color%22%3A%22%23212121%22%2C%22section_header_text_color%22%3A%22%23aaaaaa%22%2C%22subtitle_text_color%22%3A%22%23aaaaaa%22%2C%22destructive_text_color%22%3A%22%23e53935%22%7D"
+            }
+            response = await http_client.post("https://plausible.joincommunity.xyz/api/event", json=payload)
+            # print(response.status)
+            if response.status == 202:
+                return True
+            else:
+                return False
+        except:
             return False
 
     def login(self, session):
@@ -596,11 +617,13 @@ class Tapper:
 
 
 
-    async def run(self, proxy: str | None) -> None:
+    async def run(self, proxy: str | None, ua: str) -> None:
         access_token_created_time = 0
         proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
 
-        headers["User-Agent"] = generate_random_user_agent(device_type='android', browser_type='chrome')
+        headers["User-Agent"] = ua
+        chrome_ver = fetch_version(headers['User-Agent'])
+        headers['Sec-Ch-Ua'] = f'"Chromium";v="{chrome_ver}", "Android WebView";v="{chrome_ver}", "Not.A/Brand";v="99"'
         http_client = CloudflareScraper(headers=headers, connector=proxy_conn)
 
         session = cloudscraper.create_scraper()
@@ -638,6 +661,7 @@ class Tapper:
                         access_token_created_time = time_module.time()
                         token_live_time = randint(1000, 1500)
 
+
                     local_timezone = get_localzone()
                     current_time = datetime.now(local_timezone)
                     start_time = current_time.replace(hour=settings.SLEEP_TIME[0], minute=0, second=0, microsecond=0)
@@ -650,6 +674,10 @@ class Tapper:
                         time_to_sleep = (end_time - current_time).total_seconds()
                         logger.info(f"{self.session_name} | Sleeping for {time_to_sleep} seconds until {end_time}.")
                         await asyncio.sleep(time_to_sleep)
+
+                    if await self.anti_detect(http_client, self.query_anti) is False:
+                        await asyncio.sleep(15)
+                        continue
 
                     elif self.login(session):
                         user = self.get_user_data(session)
@@ -811,23 +839,39 @@ class Tapper:
                 await asyncio.sleep(delay=randint(60, 120))
 
 
-async def run_tapper(tg_client: Client, proxy: str | None):
+async def run_tapper(tg_client: Client, proxy: str | None, ua: str):
     try:
         sleep_ = randint(1, 15)
         logger.info(f"{tg_client.name} | start after {sleep_}s")
         await asyncio.sleep(sleep_)
-        await Tapper(tg_client=tg_client, multi_thread=True).run(proxy=proxy)
+        await Tapper(tg_client=tg_client, multi_thread=True).run(proxy=proxy, ua=ua)
     except InvalidSession:
         logger.error(f"{tg_client.name} | Invalid Session")
 
 
-async def run_tapper1(tg_clients: list[Client], proxies):
-    proxies_cycle = cycle(proxies) if proxies else None
+async def get_user_agent(session_name):
+    async with AIOFile('user_agents.json', 'r') as file:
+        content = await file.read()
+        user_agents = json.loads(content)
+
+    if session_name not in list(user_agents.keys()):
+        logger.info(f"{session_name} | Doesn't have user agent, Creating...")
+        ua = generate_random_user_agent(device_type='android', browser_type='chrome')
+        user_agents.update({session_name: ua})
+        async with AIOFile('user_agents.json', 'w') as file:
+            content = json.dumps(user_agents, indent=4)
+            await file.write(content)
+        return ua
+    else:
+        logger.info(f"{session_name} | Loading user agent from cache...")
+        return user_agents[session_name]
+
+async def run_tapper1(tg_clients: list[Client]):
     while True:
         for tg_client in tg_clients:
             try:
                 await Tapper(tg_client=tg_client, multi_thread=False).run(
-                    next(proxies_cycle) if proxies_cycle else None)
+                    proxy=await lc.get_proxy(tg_client.name), ua=await get_user_agent(tg_client.name))
             except InvalidSession:
                 logger.error(f"{tg_client.name} | Invalid Session")
 
