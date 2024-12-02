@@ -38,20 +38,22 @@ class Tapper:
     def __init__(self, query: str, multi_thread):
         self.query = query
         try:
-            fetch_data = unquote(self.query).split("user=")[1].split("&chat_instance=")[0]
+            fetch_data = unquote(query).split("user=")[1].split("&chat_instance=")[0]
+            json_data = json.loads(fetch_data)
+            self.session_name = json_data['username']
         except:
             try:
-                fetch_data = unquote(self.query).split("user=")[1].split("&auth_date=")[0]
+                fetch_data = unquote(query).split("user=")[1].split("&auth_date=")[0]
+                json_data = json.loads(fetch_data)
+                self.session_name = json_data['username']
             except:
-                logger.warning(f"Invaild query: {query}")
-                sys.exit()
-        #print(fetch_data)
-        try:
-            json_data = json.loads(fetch_data)
-        except:
-            fetch_data = unquote(fetch_data)
-        json_data = json.loads(fetch_data)
-        self.session_name = json_data['username']
+                try:
+                    fetch_data = unquote(unquote(query)).split("user=")[1].split("&auth_date=")[0]
+                    json_data = json.loads(fetch_data)
+                    self.session_name = json_data['username']
+                except:
+                    logger.warning(f"Invaild query: {query}")
+                    self.session_name = ""
         self.first_name = ''
         self.last_name = ''
         self.user_id = ''
@@ -93,6 +95,7 @@ class Tapper:
         self.user_upgrades = None
         self.template_to_join = 0
         self.completed_task = None
+        self.npx = "a085e2e8-366c-4013-a53d-dce28c7afe16"
 
     async def check_proxy(self, http_client: aiohttp.ClientSession, proxy: Proxy):
         try:
@@ -202,6 +205,8 @@ class Tapper:
             logger.success(f"{self.session_name} | <green>Upgrade energy limit successfully!</green>")
 
     def claimpx(self, session):
+        # claim_headers = headers.copy()
+        # claim_headers.update({"Npx": self.npx})
         res = session.get(f"{API_GAME_ENDPOINT}/mining/claim", headers=headers)
         if res.status_code == 200:
             logger.success(
@@ -770,49 +775,13 @@ async def run_query_tapper(query: str, proxy: str | None, ua: str):
     except InvalidSession:
         logger.error(f"Invalid Query: {query}")
 
-async def get_user_agent(session_name):
-    async with AIOFile('user_agents.json', 'r') as file:
-        content = await file.read()
-        user_agents = json.loads(content)
-
-    if session_name not in list(user_agents.keys()):
-        logger.info(f"{session_name} | Doesn't have user agent, Creating...")
-        ua = generate_random_user_agent(device_type='android', browser_type='chrome')
-        user_agents.update({session_name: ua})
-        async with AIOFile('user_agents.json', 'w') as file:
-            content = json.dumps(user_agents, indent=4)
-            await file.write(content)
-        return ua
-    else:
-        logger.info(f"{session_name} | Loading user agent from cache...")
-        return user_agents[session_name]
-
-def fetch_username(query):
-    try:
-        fetch_data = unquote(query).split("user=")[1].split("&chat_instance=")[0]
-        json_data = json.loads(fetch_data)
-        return json_data['username']
-    except:
-        try:
-            fetch_data = unquote(query).split("user=")[1].split("&auth_date=")[0]
-            json_data = json.loads(fetch_data)
-            return json_data['username']
-        except:
-            try:
-                fetch_data = unquote(unquote(query)).split("user=")[1].split("&auth_date=")[0]
-                json_data = json.loads(fetch_data)
-                return json_data['username']
-            except:
-                logger.warning(f"Invaild query: {query}")
-                sys.exit()
-
 async def run_query_tapper1(querys: list[str]):
 
     while True:
         for query in querys:
             try:
-                await Tapper(query=query,multi_thread=False).run(proxy=await lc.get_proxy(fetch_username(query)),
-                                                                 ua=await get_user_agent(fetch_username(query)))
+                await Tapper(query=query,multi_thread=False).run(proxy=await lc.get_proxy(lc.fetch_username(query)),
+                                                                 ua=await lc.get_user_agent(lc.fetch_username(query)))
             except InvalidSession:
                 logger.error(f"Invalid Query: {query}")
 
